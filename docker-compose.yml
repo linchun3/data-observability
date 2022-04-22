@@ -3,7 +3,7 @@
 version: "3.7"
 services:
   airflow:
-    image: bitnami/airflow:1.10.13
+    image: bitnami/airflow:2.2.5
     ports:
       - "8080:8080"
     env_file:
@@ -13,6 +13,7 @@ services:
       - AIRFLOW_PASSWORD=airflow
       - AIRFLOW_EMAIL=airflow@example.com
       - AIRFLOW_FERNET_KEY=Z2uDm0ZL60fXNkEXG8LW99Ki2zf8wkmIltaTz1iQPDU=
+      - AIRFLOW_SECRET_KEY=a25mQ1FHTUh3MnFRSk5KMEIyVVU2YmN0VGRyYTVXY08=
       - AIRFLOW_DATABASE_HOST=postgres
       - AIRFLOW_DATABASE_NAME=airflow
       - AIRFLOW_DATABASE_USERNAME=airflow
@@ -20,19 +21,24 @@ services:
       - AIRFLOW_EXECUTOR=CeleryExecutor
       - AIRFLOW_LOAD_EXAMPLES=no
       - AIRFLOW_CONN_EXAMPLE_DB=postgres://example:example@postgres:5432/example
+      - AIRFLOW__LINEAGE__BACKEND=openlineage.lineage_backend.OpenLineageBackend
     volumes:
       - ./dags:/opt/bitnami/airflow/dags
       - ${PWD}/whl:/whl
       - type: bind
         source: ${PWD}/requirements.txt
         target: /bitnami/python/requirements.txt
+
+    depends_on:
+      - postgres
 
   airflow_scheduler:
-    image: bitnami/airflow-scheduler:1.10.13
+    image: bitnami/airflow-scheduler:2.2.5
     env_file:
       - openlineage.env
     environment:
       - AIRFLOW_FERNET_KEY=Z2uDm0ZL60fXNkEXG8LW99Ki2zf8wkmIltaTz1iQPDU=
+      - AIRFLOW_SECRET_KEY=a25mQ1FHTUh3MnFRSk5KMEIyVVU2YmN0VGRyYTVXY08=
       - AIRFLOW_DATABASE_HOST=postgres
       - AIRFLOW_DATABASE_NAME=airflow
       - AIRFLOW_DATABASE_USERNAME=airflow
@@ -40,6 +46,9 @@ services:
       - AIRFLOW_EXECUTOR=CeleryExecutor
       - AIRFLOW_LOAD_EXAMPLES=no
       - AIRFLOW_CONN_EXAMPLE_DB=postgres://example:example@postgres:5432/example
+      - AIRFLOW_WEBSERVER_HOST=airflow
+      - AIRFLOW__LINEAGE__BACKEND=openlineage.lineage_backend.OpenLineageBackend
+
     volumes:
       - ./dags:/opt/bitnami/airflow/dags
       - ${PWD}/whl:/whl
@@ -47,25 +56,35 @@ services:
         source: ${PWD}/requirements.txt
         target: /bitnami/python/requirements.txt
 
+    depends_on:
+      - postgres
+
   airflow_worker:
-    image: bitnami/airflow-worker:1.10.13
+    image: docker.io/bitnami/airflow-worker:2.2.5
     env_file:
       - openlineage.env
     environment:
       - AIRFLOW_FERNET_KEY=Z2uDm0ZL60fXNkEXG8LW99Ki2zf8wkmIltaTz1iQPDU=
+      - AIRFLOW_SECRET_KEY=a25mQ1FHTUh3MnFRSk5KMEIyVVU2YmN0VGRyYTVXY08=
       - AIRFLOW_DATABASE_HOST=postgres
       - AIRFLOW_DATABASE_NAME=airflow
       - AIRFLOW_DATABASE_USERNAME=airflow
       - AIRFLOW_DATABASE_PASSWORD=airflow
-      - AIRFLOW_EXECUTOR=CeleryExecutor
-      - AIRFLOW_LOAD_EXAMPLES=no
       - AIRFLOW_CONN_EXAMPLE_DB=postgres://example:example@postgres:5432/example
+      - AIRFLOW_EXECUTOR=CeleryExecutor
+      - AIRFLOW_WEBSERVER_HOST=airflow
+      - AIRFLOW_LOAD_EXAMPLES=no
+      - AIRFLOW__LINEAGE__BACKEND=openlineage.lineage_backend.OpenLineageBackend
+
     volumes:
       - ./dags:/opt/bitnami/airflow/dags
       - ${PWD}/whl:/whl
       - type: bind
         source: ${PWD}/requirements.txt
         target: /bitnami/python/requirements.txt
+
+    depends_on:
+      - airflow
 
   marquez:
     image: marquezproject/marquez:latest

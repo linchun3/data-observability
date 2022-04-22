@@ -1,9 +1,6 @@
-from openlineage.airflow import DAG
+from airflow import DAG
 from airflow.operators.postgres_operator import PostgresOperator
 from airflow.utils.dates import days_ago
-from great_expectations_provider.operators.great_expectations import (
-    GreatExpectationsOperator,
-)
 
 default_args = {
     "owner": "datascience",
